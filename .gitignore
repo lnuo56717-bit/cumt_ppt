@@ -11,3 +11,16 @@ __pycache__/
 .env
 .DS_Store
 Thumbs.db
+
+# Existing remote template ignores; harmless to keep.
+.vscode/
+.alcache/
+.alpackages/
+.snapshots/
+.output/
+*.app
+rad.json
+*.g.xlf
+*.bclicense
+*.flf
+TestResults.xml
