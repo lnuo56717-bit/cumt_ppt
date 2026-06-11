@@ -30,10 +30,10 @@ def _make_sample_pptx(path: Path) -> Path:
         title = slide.shapes.add_textbox(Inches(0.6), Inches(0.25), Inches(8.5), Inches(0.5))
         p = title.text_frame.paragraphs[0]
         run = p.add_run()
-        run.text = f"0{idx + 1} 测试标题 AGV {idx + 1}"
+        run.text = f"0{idx + 1} 测试标题 Model {idx + 1}"
         run.font.size = Pt(28)
         body = slide.shapes.add_textbox(Inches(1.0), Inches(1.2), Inches(7.5), Inches(1.0))
-        body.text = "正文内容 PPO 147 22 32428.0"
+        body.text = "正文内容 SVM 128 64 92.5"
         # Use a simple rectangle saved as an in-deck picture-like logo is hard without image files;
         # tests cover logo normalization only when a fixture picture exists.
     prs.save(path)

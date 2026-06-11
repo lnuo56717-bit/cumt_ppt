@@ -1,14 +1,15 @@
 # Sample Workflow
 
-This example assumes Codex has loaded the `cumt_ppt_mcp` MCP server.
+This example assumes Codex has loaded the `cumt_ppt_mcp` MCP server. Paths and
+paper details below are fictional placeholders.
 
-## 1. Inspect a Deck
+## 1. Inspect A Deck
 
 Call `inspect_ppt`:
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v1.pptx"
+  "pptx_path": "C:\\work\\demo_defense_v1.pptx"
 }
 ```
 
@@ -16,40 +17,58 @@ Then inspect a problem slide:
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v1.pptx",
-  "slide_index": 14
+  "pptx_path": "C:\\work\\demo_defense_v1.pptx",
+  "slide_index": 12
 }
 ```
 
-## 2. Normalize CUMT Logo
+## 2. Inspect A Template
+
+```json
+{
+  "template_pptx_path": "C:\\work\\reference_template.pptx"
+}
+```
+
+Check `image_classifications` before applying the template. Large figures should
+be classified as `content_image`, not `header_logo`.
+
+## 3. Apply Template Style
+
+```json
+{
+  "source_pptx_path": "C:\\work\\demo_defense_v1.pptx",
+  "template_pptx_path": "C:\\work\\reference_template.pptx",
+  "output_path": "C:\\work\\demo_defense_v2_template_style.pptx"
+}
+```
+
+## 4. Normalize CUMT Logo
 
 Use slide 3 as the right-top logo reference and apply it from slide 4 onward:
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v1.pptx",
-  "output_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v2_logo.pptx",
+  "pptx_path": "C:\\work\\demo_defense_v2_template_style.pptx",
+  "output_path": "C:\\work\\demo_defense_v3_logo.pptx",
   "reference_slide_index": 3,
   "start_slide_index": 4,
   "skip_slide_indices": [1]
 }
 ```
 
-## 3. Generate a Three-Line Table
-
-Use the experiment-setting slide:
+## 5. Generate A Three-Line Table
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v2_logo.pptx",
-  "output_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v3_table.pptx",
-  "slide_index": 14,
+  "pptx_path": "C:\\work\\demo_defense_v3_logo.pptx",
+  "output_path": "C:\\work\\demo_defense_v4_table.pptx",
+  "slide_index": 10,
   "table_data": [
-    ["参数类别", "参数名称", "参数取值"],
-    ["算法", "强化学习算法", "PPO"],
-    ["工具", "训练工具", "Stable-Baselines3 / Gymnasium"],
-    ["训练", "学习率", "3e-4"],
-    ["训练", "折扣因子 γ", "0.99"]
+    ["Category", "Parameter", "Value"],
+    ["Algorithm", "Model", "ExampleNet"],
+    ["Training", "Learning rate", "1e-3"],
+    ["Evaluation", "Metric", "Accuracy"]
   ],
   "left": 1.0,
   "top": 1.4,
@@ -58,33 +77,33 @@ Use the experiment-setting slide:
 }
 ```
 
-## 4. Apply Font Rules
+## 6. Apply Font Rules
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v3_table.pptx",
-  "output_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v4_fonts.pptx",
+  "pptx_path": "C:\\work\\demo_defense_v4_table.pptx",
+  "output_path": "C:\\work\\demo_defense_v5_fonts.pptx",
   "title_font": "黑体",
   "body_font": "宋体",
   "latin_font": "Times New Roman"
 }
 ```
 
-## 5. Export Preview
+## 7. Export Preview
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v4_fonts.pptx",
-  "output_dir": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\preview_v4"
+  "pptx_path": "C:\\work\\demo_defense_v5_fonts.pptx",
+  "output_dir": "C:\\work\\preview_v5"
 }
 ```
 
-## 6. Check Quality
+## 8. Check Quality
 
 ```json
 {
-  "pptx_path": "C:\\Users\\lenovo\\Documents\\pptskill\\out\\defense_v4_fonts.pptx",
-  "expected_title": "滚筒智能生产线 AGV 自适应调度研究",
-  "required_numbers": ["6", "953", "147", "31", "142", "22", "32428.0"]
+  "pptx_path": "C:\\work\\demo_defense_v5_fonts.pptx",
+  "expected_title": "Example Thesis Defense Title",
+  "required_numbers": ["92.5", "0.01", "128"]
 }
 ```

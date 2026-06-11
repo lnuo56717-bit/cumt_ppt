@@ -34,7 +34,7 @@ Use these rules for China University of Mining and Technology undergraduate thes
 
 - Font: Times New Roman
 - Applies to English words, numbers, formulas, Greek symbols, units, and acronyms.
-- Examples: `AGV`, `PPO`, `MAPPO`, `Python`, `Gymnasium`, `Stable-Baselines3`, `60m×45m`, `2×10^5`, `3e-4`, `0.99`, `147`, `22`, `32428.0`.
+- Examples: `Model-A`, `SVM`, `CNN`, `Python`, `Dataset-X`, `Tool-Y`, `60m×45m`, `2×10^5`, `1e-3`, `0.95`, `128`, `64`, `92.5`.
 
 ## Key Numbers
 

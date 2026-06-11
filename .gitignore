@@ -8,6 +8,11 @@
 *.zip
 test_outputs/
 external_test_outputs/
+v03_test_outputs/
+v03_friend_test_outputs/
+v031_fix_test_outputs/
+preview/
+preview_v031/
 __pycache__/
 .venv/
 .env
@@ -15,6 +20,7 @@ __pycache__/
 Thumbs.db
 
 !cumt_ppt_mcp/tests/fixtures/sample_cumt_test.pptx
+!cumt_ppt_mcp/assets/cumt_logo.png
 
 # Existing remote template ignores; harmless to keep.
 .vscode/

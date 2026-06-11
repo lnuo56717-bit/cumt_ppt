@@ -32,6 +32,21 @@ Do not include confidential or copyrighted files in this skill folder. Keep user
 7. Codex opens the deck in PowerPoint with Computer Use for visual checking when requested.
 8. Codex exports PNG previews and writes a visual report.
 
+## v0.3.1 - Template image classification and logo detection fix
+
+This version updates `cumt_ppt_mcp` after an external thesis/template test exposed a template-image classification issue.
+
+- Fixed false detection of large template content images as right-top CUMT logos.
+- Strengthened `is_logo_candidate` with position, size, area-ratio, aspect-ratio, and content-region exclusion rules.
+- Enhanced `inspect_template_style` with image classification: `header_logo`, `background_decoration`, `content_image`, and `unknown_image`.
+- Updated `apply_template_style` so it applies reusable style features without copying large content images from templates.
+- Improved `check_layout_overlap` detection for suspected logo misclassification, oversized logos, and title-area obstruction.
+- Kept safe PDF image extraction with white-background handling to avoid black backgrounds from transparent PDF images.
+- Verified locally with an external thesis PDF and reference template PPT.
+- Real PDFs, PPTs, templates, preview images, and test outputs are excluded from version control.
+
+Usage details are in [`cumt_ppt_mcp/README.md`](cumt_ppt_mcp/README.md).
+
 ## v0.2.0 - cumt_ppt_mcp
 
 This repository now includes `cumt_ppt_mcp`, a Python MCP tool server that lets Codex directly inspect and operate on PPTX files.
@@ -46,6 +61,11 @@ Implemented tools:
 - `make_three_line_table`
 - `export_preview`
 - `check_ppt_quality`
+- `inspect_template_style`
+- `apply_template_style`
+- `check_layout_overlap`
+- `auto_fix_layout`
+- `extract_pdf_images_safe`
 
 The MCP server has been verified locally on a real thesis defense PPT without modifying the original file. Real PPT files, thesis PDFs, preview images, and local test outputs are excluded from version control.
 
@@ -89,9 +109,9 @@ Only upload this generic skill folder. Do not upload:
 - personal thesis PDFs;
 - formal defense PPTs;
 - classmate PPT templates;
-- school logo image files copied from official or private sources;
+- private templates or extra school logo/image files beyond the fixed `cumt_ppt_mcp/assets/cumt_logo.png` resource required by the MCP tools;
 - copyrighted or confidential figures.
 
 ## Privacy And Copyright
 
-This skill contains only reusable rules, prompts, and helper scripts. It intentionally does not include user papers, templates, or image assets. When using reference templates, borrow layout and style only; never copy their thesis content, diagrams, data, images, or logos unless the user owns or is permitted to use them.
+This skill contains reusable rules, prompts, helper scripts, and the fixed CUMT logo asset required by `cumt_ppt_mcp`. It intentionally does not include user papers, final defense PPTs, classmate templates, preview exports, or thesis figure assets. When using reference templates, borrow layout and style only; never copy their thesis content, diagrams, data, images, or logos unless the user owns or is permitted to use them.

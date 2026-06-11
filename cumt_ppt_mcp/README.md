@@ -2,6 +2,22 @@
 
 `cumt_ppt_mcp` is a local MCP server for China University of Mining and Technology undergraduate thesis defense PowerPoint automation. It lets Codex inspect and safely modify `.pptx` files through structured tools instead of relying only on natural-language editing.
 
+## v0.3.1 Highlights
+
+- Tightens template image classification so large thesis figures, model diagrams, screenshots, and background pictures are not misidentified as right-top CUMT logos.
+- Adds strict header-logo candidate rules for top-right placement, maximum width/height, area ratio, aspect ratio, and body-region exclusion.
+- `inspect_template_style` now reports picture classifications: `header_logo`, `background_decoration`, `content_image`, and `unknown_image`.
+- `apply_template_style` only uses verified `header_logo` placement and the fixed local CUMT logo asset; it does not copy template content images.
+- `check_layout_overlap` flags suspected large images misidentified as logos and recommends replacing them with the fixed logo asset.
+
+## v0.3.0 Highlights
+
+- Adds a fixed reusable CUMT logo asset at `assets/cumt_logo.png`, extracted from the final approved defense PPT cover and composited onto a white background to avoid black/transparent rendering problems.
+- Adds template-style inspection and conservative template-style application.
+- Adds layout overlap detection and conservative auto-fix tools.
+- Adds safe PDF image extraction with white-background alpha handling.
+- Adds an investigation note at `docs/pdf_image_black_background_investigation.md`.
+
 The first version focuses on CUMT-style defense deck polishing:
 
 - inspect PPTX structure and single-slide details
@@ -11,6 +27,10 @@ The first version focuses on CUMT-style defense deck polishing:
 - generate thesis-style three-line tables
 - export slide PNG previews
 - run quality checks and write a markdown report
+- inspect template style
+- apply template style conservatively
+- check and auto-fix layout overlap
+- safely extract PDF images without black backgrounds
 
 No thesis PDF, final PPT, student template, logo image, or private material is included in this project. All file paths are supplied by tool parameters.
 
@@ -152,6 +172,74 @@ Input:
 - `report_path`, optional markdown output path
 
 Checks title/numbers/placeholders/small fonts/image aspect risks/logo consistency and writes a markdown report. If `report_path` is omitted, it creates a unique report next to the PPTX.
+
+### `check_cumt_logo_asset`
+
+Input:
+
+- `logo_asset_path`, optional
+
+Checks the fixed CUMT logo asset for black background, transparency, and size risks.
+
+### `add_cumt_logo`
+
+Input:
+
+- `pptx_path`
+- `output_path`
+- `slide_indices`, optional
+- `logo_asset_path`, optional, defaults to `assets/cumt_logo.png`
+- `left`, `top`, `width`, optional, in inches
+- `skip_slide_indices`, optional
+
+Adds the fixed local CUMT logo asset to selected slides.
+
+### `inspect_template_style`
+
+Input:
+
+- `template_pptx_path`
+
+Returns page size, common colors, title bar candidates, title/body font style, layout type guesses, verified logo positions, page number positions, emphasis colors, element position parameters, and an `image_classifications` table. Large content figures are classified as `content_image` and are excluded from reusable style features.
+
+### `apply_template_style`
+
+Input:
+
+- `source_pptx_path`
+- `template_pptx_path`
+- `output_path`
+
+Conservatively applies template title bars, font hierarchy, margins, and fixed CUMT logo placement without changing slide text. It uses only verified `header_logo` placement and never copies large template content pictures into the target deck.
+
+### `check_layout_overlap`
+
+Input:
+
+- `pptx_path`
+- `report_path`, optional
+
+Checks text, image, table, and logo objects for overlap, out-of-bounds placement, title obstruction, logo/title conflicts, oversized logos, and suspected large images misidentified as logos.
+
+### `auto_fix_layout`
+
+Input:
+
+- `pptx_path`
+- `output_path`
+- `report_path`, optional
+
+Conservatively fixes obvious image overlap and out-of-bounds issues while preserving image ratio and text content.
+
+### `extract_pdf_images_safe`
+
+Input:
+
+- `pdf_path`
+- `output_dir`
+- `background_color`, default `white`
+
+Extracts embedded PDF images and page renders, composites transparency onto a white background, and writes an inventory plus report.
 
 ## Safety Rules
 

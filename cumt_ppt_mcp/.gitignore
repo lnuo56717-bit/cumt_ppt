@@ -9,6 +9,9 @@ __pycache__/
 preview*/
 test_outputs/
 external_test_outputs/
+v03_test_outputs/
+v03_friend_test_outputs/
+v031_fix_test_outputs/
 dist/
 build/
 *.egg-info/
@@ -23,3 +26,4 @@ build/
 *.xlsx
 
 !tests/fixtures/sample_cumt_test.pptx
+!assets/cumt_logo.png
