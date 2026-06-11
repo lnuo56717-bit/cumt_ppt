@@ -32,6 +32,25 @@ Do not include confidential or copyrighted files in this skill folder. Keep user
 7. Codex opens the deck in PowerPoint with Computer Use for visual checking when requested.
 8. Codex exports PNG previews and writes a visual report.
 
+## v0.2.0 - cumt_ppt_mcp
+
+This repository now includes `cumt_ppt_mcp`, a Python MCP tool server that lets Codex directly inspect and operate on PPTX files.
+
+Implemented tools:
+
+- `inspect_ppt`
+- `inspect_slide`
+- `apply_font_rules`
+- `normalize_logo`
+- `resize_images_keep_ratio`
+- `make_three_line_table`
+- `export_preview`
+- `check_ppt_quality`
+
+The MCP server has been verified locally on a real thesis defense PPT without modifying the original file. Real PPT files, thesis PDFs, preview images, and local test outputs are excluded from version control.
+
+Usage details are in [`cumt_ppt_mcp/README.md`](cumt_ppt_mcp/README.md).
+
 ## How To Ask Codex To Use It
 
 Example:

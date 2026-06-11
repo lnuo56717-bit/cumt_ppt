@@ -1,0 +1,14 @@
+# Example Codex MCP configuration for cumt_ppt_mcp.
+# Put this in your Codex config.toml and adjust paths for your machine.
+
+[mcp_servers.cumt_ppt_mcp]
+command = "C:\\Users\\lenovo\\Documents\\pptskill\\cumt_ppt_mcp\\.venv\\Scripts\\python.exe"
+args = ["-m", "cumt_ppt_mcp.server"]
+cwd = "C:\\Users\\lenovo\\Documents\\pptskill\\cumt_ppt_mcp"
+
+# If you installed into your active Python instead of a venv:
+#
+# [mcp_servers.cumt_ppt_mcp]
+# command = "python"
+# args = ["-m", "cumt_ppt_mcp.server"]
+# cwd = "C:\\Users\\lenovo\\Documents\\pptskill\\cumt_ppt_mcp"

@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*_quality_report.md
+preview*/
+test_outputs/
+external_test_outputs/
+dist/
+build/
+*.egg-info/
+
+# Keep generic test fixtures small and public-safe. Do not add private thesis material.
+*.pdf
+*.pptx
+*.png
+*.jpg
+*.jpeg
+*.docx
+*.xlsx
+
+!tests/fixtures/sample_cumt_test.pptx

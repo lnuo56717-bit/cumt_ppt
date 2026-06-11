@@ -6,11 +6,15 @@
 *.jpg
 *.jpeg
 *.zip
+test_outputs/
+external_test_outputs/
 __pycache__/
 .venv/
 .env
 .DS_Store
 Thumbs.db
+
+!cumt_ppt_mcp/tests/fixtures/sample_cumt_test.pptx
 
 # Existing remote template ignores; harmless to keep.
 .vscode/
