@@ -1,83 +1,119 @@
 ---
 name: cumt_ppt
-description: Create and polish China University of Mining and Technology undergraduate thesis defense PowerPoint presentations from thesis PDFs, figure folders, and optional templates, with CUMT-style academic layout, strict font rules, logo consistency, three-line tables, and visual self-check.
+description: Create and polish CUMT-style academic PowerPoint presentations from thesis PDFs or journal papers, with section breadcrumb navigation, embedded PDF figure extraction, formula rendering, blue-white academic style, strict font rules, three-line tables, and visual self-check.
 ---
 
 # CUMT PPT Skill
 
-Use this skill to create or polish China University of Mining and Technology undergraduate thesis defense PowerPoint decks from a thesis PDF, a figure folder, an optional existing PPT, and an optional style template.
+Use this skill to create CUMT-style academic PowerPoint decks from a thesis PDF or a journal/conference paper PDF, with optional figure folders and reference templates.
+
+## Supported Modes
+
+| Mode | When to use | Prompt to load |
+|------|-------------|----------------|
+| Generate from thesis PDF | CUMT undergraduate/graduate thesis defense | `prompts/generate_from_pdf.md` |
+| Generate from journal paper | APL / Nature / IEEE journal article presentation | `prompts/generate_from_journal.md` |
+| Polish existing PPT | Small-scope improvement of an accepted deck | `prompts/polish_existing_ppt.md` |
 
 ## Core Workflow
 
 1. **Collect inputs**
-   - Thesis PDF: required for new decks.
-   - Figure folder: recommended.
+   - Source PDF: required (thesis or journal paper).
+   - Figure folder: optional; if absent, extract figures directly from PDF.
    - Existing PPT: optional, for polishing only.
    - Reference template PPT: optional, for layout/style only.
    - Output path and desired filename.
 
-2. **Extract thesis content**
-   - Read the PDF and extract: exact thesis title, author, advisor, college, major, date, abstract, keywords, table of contents, chapter headings, methods, model definitions, algorithm settings, experiment data, conclusions, limitations, and future work.
-   - Treat PDF content as highest priority, then existing PPT, then figure filenames/content.
-   - Do not invent missing thesis claims or data.
+2. **Extract content from PDF**
+   - Read the full PDF text and extract:
+     - Thesis: title, author, advisor, college, major, date, abstract, keywords, TOC, chapter headings, methods, algorithms, experiment data, conclusions, limitations, future work.
+     - Journal paper: title, authors, affiliations, journal/DOI, abstract, introduction motivation, device/method design, key equations, simulation results, experimental setup, measured data, conclusions.
+   - Treat PDF text as highest priority. Do not fabricate content, formulas, or data.
 
-3. **Scan figures**
-   - Enumerate `.png`, `.jpg`, `.jpeg`, `.svg`, and other usable image files.
-   - Inspect filename, dimensions, clarity, and visual content.
-   - Create:
-     - `image_inventory.md`: filename, dimensions, likely meaning, clarity, recommended use, reject reason if any.
-     - `image_slide_mapping.md`: slide number/title, selected image path, rationale, and fit/crop notes.
+3. **Extract figures from PDF**
+   - **Embedded images first**: use `extract_pdf_images_safe` MCP tool (or PyMuPDF `page.get_images()`) to pull high-resolution images directly embedded in the PDF. These are typically the paper's actual figures and are higher quality than page renders.
+   - **Page renders as fallback**: if embedded images are too small or absent, render full pages at 3× zoom (~216 DPI) using `fitz.Matrix(3, 3)`.
+   - Record a figure inventory: page number, image index, pixel dimensions, likely figure label (Fig. 1, Fig. 2 …), and recommended slide target.
+   - Skip cover/TOC/reference page images (logos, icons < 200 px).
 
-4. **Choose a route**
-   - **Generate from PDF**: use `prompts/generate_from_pdf.md`.
-   - **Polish existing PPT**: use `prompts/polish_existing_ppt.md`; do not rebuild confirmed decks.
-   - **Apply optional template**: borrow only layout, font hierarchy, colors, title bars, section rhythm, and table style. Never copy template thesis content, images, data, figures, or unrelated diagrams.
-   - **Final cleanup**: use `prompts/final_cleanup.md`.
+4. **Render formulas as images**
+   - For any mathematical formula mentioned in the paper, render it as a transparent PNG using `scripts/render_formulas.py` (matplotlib mathtext, no LaTeX install required).
+   - Key rules for matplotlib mathtext:
+     - Use a single `$...$` block per `ax.text` call; avoid adjacent `$...$` pairs.
+     - Do not use `\&` (unsupported); use `\text{and}` or plain text instead.
+     - `\dfrac`, `\sqrt`, `\times`, `\mathcal`, `\mathrm`, `\Rightarrow` all work.
+     - Save with `transparent=True`, `bbox_inches='tight'`, `dpi=160`.
+   - Insert formula PNGs into slides using `slide.shapes.add_picture()`.
 
-5. **Build or edit the deck**
-   - Recommended page count: 14-20 slides.
-   - Use the structure in `references/slide_structure.md` unless the user specifies otherwise.
-   - Apply the style rules in `references/style_rules.md`.
-   - Apply the font rules in `references/font_rules.md`.
-   - Use editable native shapes/tables/charts when image clarity is poor.
-   - Use real images only when they match the slide topic and are readable.
+5. **Choose slide structure**
+   - For thesis defense: use `references/slide_structure.md` (14–20 slides).
+   - For journal paper: use `references/slide_structure.md` journal section (12–16 slides):
+     1. Cover (title, authors, journal, DOI)
+     2. Outline
+     3. Research background & motivation
+     4. Device / method design
+     5. Working principle
+     6. Simulation analysis
+     7. Fabrication & characterization
+     8. Experimental setup
+     9. Key results (absorption / response / spectra)
+     10. Performance metrics table
+     11. Conclusions & outlook
+     12. Acknowledgements / Thank you
 
-6. **Special layout requirements**
+6. **Build the deck (python-pptx)**
+   - Slide size: 13.333″ × 7.5″ (widescreen).
+   - Apply style from `references/style_rules.md` and fonts from `references/font_rules.md`.
+   - **Title bar** (top, 1.0″ tall, deep blue): slide number badge + title text.
+   - **Breadcrumb navigation strip** (below title bar, 0.32″ tall): show all outline sections as colored tabs; highlight the current section in amber/gold. Use `add_breadcrumb_strip` MCP tool or implement directly with `add_shape` rectangles.
+   - **Content area**: starts at 1.32″ from top.
+   - **Font rules (critical)**:
+     - In `run.font`, set `rf.name = en_font` for Latin.
+     - Then set `a:ea typeface = cn_font` via XML (`run._r.get_or_add_rPr()`) for Chinese characters.
+     - Setting `rf.name = cn_font` then `rf.name = en_font` will overwrite the Chinese font — always set East Asian via XML.
+   - **Chinese string literals**: avoid smart/curly quotes `"` `"` (U+201C/U+201D) inside Python string literals; they are indistinguishable from ASCII `"` in some editors and cause SyntaxError. Use `[` `]` or `'` `'` instead.
+   - Layout per slide type:
+     - Left-text / right-image: text 45–52 %, image 45–52 %.
+     - Conclusion-first experiment page: key finding box on top, chart/table below.
+     - Three-line table for parameter/settings pages.
+
+7. **Special layout requirements**
    - Keep a unified top title bar and blue-white academic style.
-   - Place the China University of Mining and Technology logo consistently at the upper right, using a user-provided or existing in-deck logo. Do not fetch or bundle a new logo.
-   - Convert experiment-setting pages, such as PPO parameter pages, into three-line tables when appropriate.
-   - For reward ablation, multi-scale, and multi-panel experiment pages, prefer: upper centered charts + lower concise conclusions.
-   - Experiment result pages should be evidence-led: conclusion first, then chart/table support.
+   - Breadcrumb must reflect the active outline section on every content slide.
+   - Place the CUMT logo consistently at upper right when a logo asset is available.
+   - Convert experiment-setting pages into three-line tables when appropriate.
+   - For multi-panel figure pages, prefer: upper centered charts + lower concise conclusions.
 
-7. **Validate**
-   - Run `scripts/check_ppt_fonts.py` to detect common font violations.
+8. **Validate**
+   - Run `scripts/check_ppt_fonts.py` to detect font violations.
    - Run `scripts/normalize_cumt_logo.py` when logo consistency is required.
    - Run `scripts/export_preview.py` to export PNG previews.
-   - Use Computer Use to open PowerPoint and visually inspect every page when the user asks for final visual QA.
-   - Produce a visual report with: slide number, check result, modification made, and remaining manual issues.
+   - Run `check_ppt_quality` MCP tool for title, placeholder, and font checks.
+   - Produce a final report: slide number, check result, modification made, remaining issues.
 
 ## Hard Rules
 
-- Never change the thesis title unless the user explicitly asks.
-- Never fabricate thesis content, formulas, experiment data, or conclusions.
-- Never change experiment data.
-- Never place images on unrelated slides.
-- Never copy non-user thesis content, images, data, or professional diagrams from a reference template.
-- Never use unreadable, blurry, distorted, or topic-mismatched images.
-- Never fill slides with long paragraphs; use concise bullets, tables, diagrams, and charts.
-- Never rebuild an already accepted PPT unless the user explicitly requests a rebuild.
-- Never package user thesis PDFs, formal PPTs, classmate templates, school logo assets, or copyrighted/private materials into this skill.
+- Never change the original paper/thesis title unless the user explicitly asks.
+- Never fabricate content, formulas, experiment data, or conclusions.
+- Never place figures on slides unrelated to those figures.
+- Never copy content, images, or data from a reference template.
+- Never use unreadable, blurry, or topic-mismatched images.
+- Never fill slides with dense paragraphs; use bullets, tables, and charts.
+- Never rebuild an accepted deck unless the user explicitly requests it.
+- Never package private PDFs, PPTs, thesis files, or copyrighted materials into this skill.
 
 ## Bundled Resources
 
 - `references/font_rules.md`: CUMT defense font hierarchy.
 - `references/style_rules.md`: visual style and layout rules.
-- `references/slide_structure.md`: recommended slide spine.
-- `prompts/generate_from_pdf.md`: prompt for creating a deck from PDF and figures.
+- `references/slide_structure.md`: recommended slide spines (thesis + journal paper).
+- `prompts/generate_from_pdf.md`: prompt for creating a deck from a thesis PDF.
+- `prompts/generate_from_journal.md`: prompt for creating a deck from a journal paper.
 - `prompts/polish_existing_ppt.md`: prompt for small-scope polishing.
 - `prompts/visual_check.md`: prompt/checklist for PowerPoint visual QA.
 - `prompts/final_cleanup.md`: final cleanup checklist.
 - `scripts/check_ppt_fonts.py`: report likely font rule violations.
 - `scripts/normalize_cumt_logo.py`: normalize upper-right CUMT logo size/position.
 - `scripts/export_preview.py`: export PPT pages as PNG previews.
-- `scripts/make_three_line_table.py`: helper for drawing editable three-line tables with python-pptx.
+- `scripts/make_three_line_table.py`: helper for drawing editable three-line tables.
+- `scripts/render_formulas.py`: render LaTeX/mathtext formulas as transparent PNG images.

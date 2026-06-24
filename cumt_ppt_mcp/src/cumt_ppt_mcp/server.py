@@ -192,6 +192,63 @@ def extract_pdf_images_safe(pdf_path: str, output_dir: str, background_color: st
     return _safe_call(extract_pdf_images_safe_impl, pdf_path, output_dir, background_color)
 
 
+@mcp.tool()
+def render_formula_png(
+    formula_tex: str,
+    output_path: str,
+    fig_width: float = 7.0,
+    fig_height: float = 1.0,
+    fontsize: int = 22,
+    color: str = "#1F497D",
+    background: str | None = None,
+    dpi: int = 160,
+) -> dict[str, Any]:
+    """Render a LaTeX/mathtext formula as a transparent PNG using matplotlib mathtext.
+
+    No LaTeX installation required. Uses a single $...$ mathtext block.
+    Avoid adjacent $A$ $B$ pairs and \\& (use \\mathrm{and} instead).
+    Returns: ok, output_path, width_px, height_px, error.
+    """
+    from cumt_ppt_mcp.ppt_utils import render_formula_png as _impl
+    return _impl(formula_tex, output_path, fig_width, fig_height, fontsize, color, background, dpi)
+
+
+@mcp.tool()
+def add_breadcrumb_strip(
+    pptx_path: str,
+    output_path: str,
+    sections: list[dict[str, str]],
+    slide_section_map: dict[str, int | None],
+    top_inch: float = 1.0,
+    height_inch: float = 0.32,
+    active_color: str = "#FFC000",
+    inactive_color: str = "#2E5FA3",
+) -> dict[str, Any]:
+    """Add a section-breadcrumb navigation strip to every slide in a PPTX file.
+
+    sections: list of {label, name} dicts, e.g. [{"label":"01","name":"研究背景"}, ...].
+    slide_section_map: maps 1-based slide number (as string) to 0-based section index or null.
+    Saves the modified deck to output_path.
+    Returns: ok, slide_count, error.
+    """
+    try:
+        from pptx import Presentation
+        from cumt_ppt_mcp.ppt_utils import add_breadcrumb_strip as _impl
+
+        section_tuples = [(s["label"], s["name"]) for s in sections]
+        prs = Presentation(pptx_path)
+        for i, slide in enumerate(prs.slides):
+            slide_num_str = str(i + 1)
+            active_idx = slide_section_map.get(slide_num_str)
+            _impl(slide, section_tuples, active_idx,
+                  top_inch=top_inch, height_inch=height_inch,
+                  active_color=active_color, inactive_color=inactive_color)
+        prs.save(output_path)
+        return {"ok": True, "slide_count": len(prs.slides), "output_path": output_path, "error": None}
+    except Exception as exc:
+        return {"ok": False, "slide_count": 0, "output_path": output_path, "error": str(exc)}
+
+
 def main() -> None:
     mcp.run()
 

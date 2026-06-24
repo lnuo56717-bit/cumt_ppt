@@ -1439,6 +1439,147 @@ def extract_pdf_images_safe(pdf_path: str, output_dir: str, background_color: st
     return {"ok": True, "pdf_path": str(pdf), "output_dir": str(out_dir), "image_count": len(extracted), "rendered_page_count": len(rendered), "inventory_path": str(inventory_path), "report_path": str(report_path), "extracted_images": extracted[:20], "rendered_pages": rendered[:10]}
 
 
+def render_formula_png(
+    formula_tex: str,
+    output_path: str,
+    fig_width: float = 7.0,
+    fig_height: float = 1.0,
+    fontsize: int = 22,
+    color: str = "#1F497D",
+    background: str | None = None,
+    dpi: int = 160,
+) -> dict[str, Any]:
+    """Render a LaTeX/mathtext formula as a transparent PNG using matplotlib mathtext.
+
+    No LaTeX installation required. Uses matplotlib's built-in mathtext engine.
+
+    Rules for formula_tex:
+    - Wrap math in a single $...$ block; do NOT use adjacent $A$ $B$ pairs.
+    - Avoid \\& (unsupported); use \\text{and} or \\mathrm{and} instead.
+    - \\dfrac, \\sqrt, \\times, \\mathcal, \\mathrm, \\Rightarrow all work.
+    - Mix plain text and math freely inside one $...$ block using \\text{}.
+
+    Returns dict with keys: ok, output_path, width_px, height_px, error.
+    """
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from pathlib import Path
+
+        out = Path(output_path)
+        out.parent.mkdir(parents=True, exist_ok=True)
+
+        fig = plt.figure(figsize=(fig_width, fig_height))
+        if background:
+            fig.patch.set_facecolor(background)
+        else:
+            fig.patch.set_alpha(0.0)
+
+        ax = fig.add_axes([0, 0, 1, 1])
+        ax.set_axis_off()
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.text(
+            0.5, 0.5, formula_tex,
+            fontsize=fontsize,
+            ha="center", va="center",
+            color=color,
+            transform=ax.transAxes,
+            usetex=False,
+        )
+        fig.savefig(str(out), dpi=dpi, bbox_inches="tight",
+                    transparent=(background is None), pad_inches=0.05)
+        plt.close(fig)
+
+        from PIL import Image
+        im = Image.open(str(out))
+        w, h = im.size
+        return {"ok": True, "output_path": str(out), "width_px": w, "height_px": h, "error": None}
+    except Exception as exc:
+        return {"ok": False, "output_path": output_path, "width_px": 0, "height_px": 0, "error": str(exc)}
+
+
+def add_breadcrumb_strip(
+    slide: Any,
+    sections: list[tuple[str, str]],
+    active_index: int | None,
+    left_inch: float = 0.0,
+    top_inch: float = 1.0,
+    width_inch: float = 13.333,
+    height_inch: float = 0.32,
+    active_color: str = "#FFC000",
+    inactive_color: str = "#2E5FA3",
+    text_color_active: str = "#FFFFFF",
+    text_color_inactive: str = "#CCDDEE",
+    font_size_pt: float = 8.5,
+) -> dict[str, Any]:
+    """Draw a section-breadcrumb navigation strip on a slide.
+
+    Creates one colored rectangle tab per section. The active section is highlighted
+    in amber/gold; inactive sections use a muted blue. A thin separator line is drawn
+    between each tab.
+
+    Args:
+        slide: python-pptx slide object.
+        sections: list of (label, name) tuples, e.g. [("01", "研究背景"), ...].
+        active_index: 0-based index into sections for the current section; None for
+                      slides with no active section (cover, outline, thank-you).
+        left_inch … height_inch: position and size of the strip.
+        active_color: hex fill for the active tab.
+        inactive_color: hex fill for inactive tabs.
+        text_color_active / text_color_inactive: hex text colors.
+        font_size_pt: tab label font size in points.
+
+    Returns: dict with ok, shape_count, error.
+    """
+    try:
+        from pptx.util import Inches, Pt
+        from pptx.dml.color import RGBColor
+        from pptx.enum.text import PP_ALIGN
+
+        n = len(sections)
+        if n == 0:
+            return {"ok": True, "shape_count": 0, "error": None}
+
+        tab_w = Inches(width_inch / n)
+        strip_h = Inches(height_inch)
+        strip_t = Inches(top_inch)
+
+        shapes_added = 0
+        for i, (label, name) in enumerate(sections):
+            left = Inches(left_inch + (width_inch / n) * i)
+            is_active = (i == active_index)
+            fill_hex = active_color if is_active else inactive_color
+            txt_hex = text_color_active if is_active else text_color_inactive
+
+            def _hex(h: str) -> RGBColor:
+                h = h.lstrip("#")
+                return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+
+            box = slide.shapes.add_textbox(left, strip_t, tab_w, strip_h)
+            tf = box.text_frame
+            tf.word_wrap = False
+            p = tf.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
+
+            run = p.add_run()
+            run.text = f"{label} {name}"
+            rf = run.font
+            rf.size = Pt(font_size_pt)
+            rf.bold = is_active
+            rf.color.rgb = _hex(txt_hex)
+
+            fill = box.fill
+            fill.solid()
+            fill.fore_color.rgb = _hex(fill_hex)
+            shapes_added += 1
+
+        return {"ok": True, "shape_count": shapes_added, "error": None}
+    except Exception as exc:
+        return {"ok": False, "shape_count": 0, "error": str(exc)}
+
+
 def json_dumps(data: Any) -> str:
     import json
 
