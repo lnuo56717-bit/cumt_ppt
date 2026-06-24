@@ -61,6 +61,28 @@ Use this skill to create CUMT-style academic PowerPoint decks from a thesis PDF 
      11. Conclusions & outlook
      12. Acknowledgements / Thank you
 
+5.5. **Figure strategy — what to generate vs. what to extract**
+
+   Two figure sources coexist; choose per slide type:
+
+   | Slide content | Source | Tool |
+   |---|---|---|
+   | Actual measurement spectra, SEM/TEM images, R-T curves | Extract from PDF | `extract_pdf_images_safe` MCP / PyMuPDF |
+   | Data charts (absorption, NEP, D*, responsivity vs. frequency) | Generate from paper data | `scipilot-figure-skill` (see below) |
+   | Process flow, research methodology, decision logic | **Generate** | `scripts/generate_diagram.py` `draw_flowchart()` |
+   | System/device layer structure | **Generate** | `scripts/generate_diagram.py` `draw_layer_diagram()` |
+   | Measurement setup block diagram | **Generate** | `scripts/generate_diagram.py` `draw_block_diagram()` |
+
+   **scipilot-figure-skill** ([github.com/Haojae/scipilot-figure-skill](https://github.com/Haojae/scipilot-figure-skill)):
+   - Use for data-driven charts: line plots, bar charts, scatter, heatmaps, violin plots, error bars.
+   - Follow its 8-step workflow: profile data → select chart type → configure style → draw → visual-QA loop → export.
+   - Note: it explicitly does **not** generate flowcharts, architecture diagrams, or schematics — use `generate_diagram.py` for those.
+
+   **Image proportion rule (critical)**:
+   - Always use `fit_image_in_box(img_path, max_w_in, max_h_in)` from `generate_diagram.py` to get the display width/height before calling `slide.shapes.add_picture()`.
+   - Portrait images (height > width) at a fixed wide `w` will overflow the slide — let `fit_image_in_box` scale them down by height instead.
+   - Example: a 851×1299 image inserted at 5.8″ wide → 8.9″ tall (overflows 7.5″ slide). Correct: clamp to max_h=5.5″ → 3.6″ wide.
+
 6. **Build the deck (python-pptx)**
    - Slide size: 13.333″ × 7.5″ (widescreen).
    - Apply style from `references/style_rules.md` and fonts from `references/font_rules.md`.
@@ -102,6 +124,10 @@ Use this skill to create CUMT-style academic PowerPoint decks from a thesis PDF 
 - Never rebuild an accepted deck unless the user explicitly requests it.
 - Never package private PDFs, PPTs, thesis files, or copyrighted materials into this skill.
 
+## External Skill Dependencies
+
+- **scipilot-figure-skill** (`https://github.com/Haojae/scipilot-figure-skill`): for publication-quality data charts. Covers matplotlib + seaborn, journal specs, visual QA loop, CJK font fix. Does NOT generate flowcharts or architecture diagrams.
+
 ## Bundled Resources
 
 - `references/font_rules.md`: CUMT defense font hierarchy.
@@ -117,3 +143,4 @@ Use this skill to create CUMT-style academic PowerPoint decks from a thesis PDF 
 - `scripts/export_preview.py`: export PPT pages as PNG previews.
 - `scripts/make_three_line_table.py`: helper for drawing editable three-line tables.
 - `scripts/render_formulas.py`: render LaTeX/mathtext formulas as transparent PNG images.
+- `scripts/generate_diagram.py`: generate flowcharts, layer diagrams, and block diagrams as PNGs (covers what scipilot-figure-skill explicitly excludes). Run `--demo` to preview three sample diagrams.

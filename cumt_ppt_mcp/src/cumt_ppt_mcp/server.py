@@ -193,6 +193,78 @@ def extract_pdf_images_safe(pdf_path: str, output_dir: str, background_color: st
 
 
 @mcp.tool()
+def fit_image_in_box(img_path: str, box_w_inch: float, box_h_inch: float) -> dict[str, Any]:
+    """Return display (width, height) in inches that fit an image inside a box preserving aspect ratio.
+
+    Always call this before slide.shapes.add_picture() to prevent portrait images from
+    overflowing the slide bottom. Returns: ok, width_inch, height_inch, scale, error.
+    """
+    from cumt_ppt_mcp.ppt_utils import fit_image_in_box as _impl
+    return _impl(img_path, box_w_inch, box_h_inch)
+
+
+@mcp.tool()
+def generate_diagram(
+    diagram_type: str,
+    spec: dict[str, Any],
+    output_path: str,
+    figsize: list[float] | None = None,
+    dpi: int = 160,
+    title: str = "",
+    lang: str = "zh",
+) -> dict[str, Any]:
+    """Generate a flowchart, layer diagram, or block diagram as a PNG using matplotlib.
+
+    Covers diagram types that scipilot-figure-skill explicitly excludes (flowcharts,
+    architecture diagrams, system block diagrams).
+
+    Args:
+        diagram_type: "flowchart" | "layer_diagram" | "block_diagram"
+        spec: type-specific spec dict:
+            flowchart    : {"nodes": [...], "edges": [...]}
+            layer_diagram: {"layers": [...]}
+            block_diagram: {"blocks": [...], "connections": [...]}
+        output_path: output PNG path.
+        figsize: [width, height] in inches (optional, auto-sized per type).
+        dpi: output resolution (default 160).
+        title: optional chart title.
+        lang: "zh" or "en".
+
+    Returns: dict with ok, output_path, error.
+    """
+    try:
+        import sys
+        import importlib.util
+        from pathlib import Path
+
+        script = Path(__file__).parent.parent.parent.parent.parent / "scripts" / "generate_diagram.py"
+        spec_mod = importlib.util.spec_from_file_location("generate_diagram", str(script))
+        if spec_mod is None:
+            raise ImportError(f"Cannot find generate_diagram.py at {script}")
+        mod = importlib.util.module_from_spec(spec_mod)
+        spec_mod.loader.exec_module(mod)
+
+        fs = tuple(figsize) if figsize else None
+        kwargs = dict(output_path=output_path, dpi=dpi, title=title, lang=lang)
+        if fs:
+            kwargs["figsize"] = fs
+
+        if diagram_type == "flowchart":
+            mod.draw_flowchart(nodes=spec["nodes"], edges=spec["edges"], **kwargs)
+        elif diagram_type == "layer_diagram":
+            mod.draw_layer_diagram(layers=spec["layers"], **kwargs)
+        elif diagram_type == "block_diagram":
+            mod.draw_block_diagram(
+                blocks=spec["blocks"], connections=spec["connections"], **kwargs)
+        else:
+            raise ValueError(f"Unknown diagram_type: {diagram_type!r}")
+
+        return {"ok": True, "output_path": output_path, "error": None}
+    except Exception as exc:
+        return {"ok": False, "output_path": output_path, "error": str(exc)}
+
+
+@mcp.tool()
 def render_formula_png(
     formula_tex: str,
     output_path: str,

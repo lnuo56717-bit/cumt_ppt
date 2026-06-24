@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.0
+
+- Integrated `scipilot-figure-skill` (https://github.com/Haojae/scipilot-figure-skill) as an external dependency for data-driven charts; documented the division of responsibility in SKILL.md: scipilot handles data charts, `generate_diagram.py` handles flowcharts/architecture/block diagrams.
+- Added `scripts/generate_diagram.py`: generates flowcharts (`draw_flowchart`), layer/architecture diagrams (`draw_layer_diagram`), and system block diagrams (`draw_block_diagram`) using matplotlib — all three types that scipilot-figure-skill explicitly excludes.
+- Added `fit_image_in_box()` in `ppt_utils.py` and as an MCP tool: computes correct (width, height) that fit an image inside a bounding box preserving aspect ratio. Fixes portrait-image overflow that caused height to exceed slide bounds in v2 PPT.
+- Added `generate_diagram` MCP tool wrapping all three diagram types.
+- Updated SKILL.md Step 5.5: figure strategy table (extract vs. generate), scipilot-figure-skill note, and critical image proportion rule.
+- Fixed image proportion issues in the APL paper PPT v2: portrait image `p5_img10.jpeg` (851×1299) was being inserted at 5.8″ wide → 8.9″ tall (overflowing a 7.5″ slide); correct approach constrains by height.
+
 ## v0.4.0
 
 - Extended SKILL.md to support journal/conference paper presentations alongside thesis defense.

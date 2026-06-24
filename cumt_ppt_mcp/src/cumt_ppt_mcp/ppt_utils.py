@@ -1439,6 +1439,44 @@ def extract_pdf_images_safe(pdf_path: str, output_dir: str, background_color: st
     return {"ok": True, "pdf_path": str(pdf), "output_dir": str(out_dir), "image_count": len(extracted), "rendered_page_count": len(rendered), "inventory_path": str(inventory_path), "report_path": str(report_path), "extracted_images": extracted[:20], "rendered_pages": rendered[:10]}
 
 
+def fit_image_in_box(
+    img_path: str,
+    box_w_inch: float,
+    box_h_inch: float,
+) -> dict[str, Any]:
+    """Return the display (width, height) in inches that fit an image inside a box
+    while preserving the image aspect ratio.
+
+    Use this before every slide.shapes.add_picture() call to avoid portrait
+    images overflowing the slide bottom or landscape images overflowing the right edge.
+
+    Args:
+        img_path: path to the image file (JPEG, PNG, etc.)
+        box_w_inch: maximum allowed width in inches.
+        box_h_inch: maximum allowed height in inches.
+
+    Returns: dict with keys: ok, width_inch, height_inch, scale, error.
+    """
+    try:
+        from PIL import Image
+        im = Image.open(img_path)
+        iw, ih = im.size
+        ratio = ih / iw
+
+        w = min(box_w_inch, box_h_inch / ratio)
+        h = w * ratio
+        if h > box_h_inch:
+            h = box_h_inch
+            w = h / ratio
+
+        scale = w / box_w_inch
+        return {"ok": True, "width_inch": round(w, 4), "height_inch": round(h, 4),
+                "scale": round(scale, 4), "error": None}
+    except Exception as exc:
+        return {"ok": False, "width_inch": box_w_inch, "height_inch": box_h_inch,
+                "scale": 1.0, "error": str(exc)}
+
+
 def render_formula_png(
     formula_tex: str,
     output_path: str,
