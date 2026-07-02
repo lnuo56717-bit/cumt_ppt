@@ -384,16 +384,16 @@ def draw_block_diagram(
 
 def _configure_font(lang: str) -> None:
     import matplotlib as mpl
+    import matplotlib.font_manager as fm
     if lang == "zh":
-        for family in ["Noto Sans CJK SC", "Source Han Sans SC",
-                        "SimHei", "Microsoft YaHei"]:
-            try:
-                mpl.rcParams["font.family"] = family
-                fig_test = plt.figure()
-                plt.close(fig_test)
+        candidates = ["SimHei", "Microsoft YaHei", "Noto Sans CJK SC",
+                      "Source Han Sans SC", "Noto Sans SC", "FZHei-B01"]
+        available = {f.name for f in fm.fontManager.ttflist}
+        for family in candidates:
+            if family in available:
+                mpl.rcParams["font.family"] = "sans-serif"
+                mpl.rcParams["font.sans-serif"] = [family]
                 break
-            except Exception:
-                continue
     mpl.rcParams["axes.unicode_minus"] = False
 
 
